@@ -6,6 +6,8 @@ import json
 from functools import reduce
 
 # DJANGO IMPORTS
+from uuid import UUID
+
 from django.http import HttpResponse
 from django.db import models, connection
 from django.db.models.constants import LOOKUP_SEP
@@ -53,6 +55,13 @@ def get_autocomplete_search_fields(model):
         return AUTOCOMPLETE_SEARCH_FIELDS[model._meta.app_label][model._meta.model_name]
     except KeyError:
         return
+
+
+def uuid_to_str(pk):
+    if type(pk) is UUID:
+        return str(pk)
+    else:
+        return pk
 
 
 class RelatedLookup(View):
@@ -210,7 +219,7 @@ class AutocompleteLookup(RelatedLookup):
         return qs.distinct()
 
     def get_data(self):
-        return [{"value": f.pk, "label": get_label(f)} for f in self.get_queryset()[:AUTOCOMPLETE_LIMIT]]
+        return [{"value": uuid_to_str(f.pk), "label": get_label(f)} for f in self.get_queryset()[:AUTOCOMPLETE_LIMIT]]
 
     @never_cache
     def get(self, request, *args, **kwargs):
